@@ -2,7 +2,7 @@ import os
 import json
 from bs4 import BeautifulSoup
 from openai import OpenAI
-from purify import remove_tags
+from purify import clean_html
 from lxml import etree
 
 
@@ -33,7 +33,7 @@ class ProductPageScraper:
         if not html_data:
             return None
         host = url.split("/")[2]
-        purified_html_data = remove_tags(
+        purified_html_data = clean_html(
             f"purified/purified_{host}.html", html_content=html_data
         )
         schema = self.pridict(purified_html_data)
