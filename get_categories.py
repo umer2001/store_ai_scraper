@@ -7,8 +7,9 @@ urls = [
 ]
 
 
-scraper = CategoriesScraper()
+scraper = CategoriesScraper(gpt_api_key="")
+
 
 for url in urls:
     print(url)
-    scraper.extract_categories(url)
+    scraper.extract_and_map_categories(url)
