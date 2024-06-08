@@ -11,6 +11,9 @@
   "description": "",
   "dependencies": {
     "express": "^4.19.2",
-    "puppeteer": "^22.9.0"
+    "puppeteer": "^22.9.0",
+    "cheerio": "^1.0.0-rc.12",
+    "puppeteer-screen-recorder": "^3.0.3",
+    "openai": "^4.47.3"
   }
 }
