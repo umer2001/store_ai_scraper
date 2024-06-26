@@ -1,11 +1,13 @@
+import os
 import argparse
 from purify import clean_html
 
 
-def main(file_name):
-    print(f"The provided URL is: {file_name}")
+def main(file_path):
+    path, file_name = os.path.split(file_path)
+    print(f"The file path is: {file_path}")
     clean_html(
-        f"../purified/purified_{file_name}", html_file_path=f"../html/{file_name}"
+        f"{path}/purified_{file_name}", html_file_path=f"{file_path}"
     )
 
 

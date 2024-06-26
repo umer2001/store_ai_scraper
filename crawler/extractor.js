@@ -14,6 +14,12 @@ const extractProductsLink = (htmlContent, selectors = {
     return productLinks;
 }
 
+const elementExist = (htmlContent, selector) => {
+    const $ = cheerio.load(htmlContent);
+    return $(selector)
+}
+
 module.exports = {
-    extractProductsLink
+    extractProductsLink,
+    elementExist
 };

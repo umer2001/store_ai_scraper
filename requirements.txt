@@ -1,0 +1,6 @@
+Scrapy
+scrapy-splash
+beautifulsoup4
+scrapy-selenium
+selenium
+htmlmin

@@ -1,7 +1,5 @@
 const puppeteer = require('puppeteer');
-const fs = require('fs');
-const path = require('path');
-const { PuppeteerScreenRecorder } = require('puppeteer-screen-recorder');
+const { waitFor } = require('./utils');
 
 async function getHTML(url) {
     // set User-Agent
@@ -28,8 +26,27 @@ async function getHTML(url) {
     return html;
 }
 
-async function getCategorizedCatalogHTML(
-    categoryUrl,
+async function getCatalogHTML(
+    catalogUrl,
+    pagenation = {
+        pagenationType: null,
+        xpath: null,
+        cssSelector: null
+    },
+) {
+    if (pagenation.pagenationType === 'Load More Button') {
+        return [await loadMore(catalogUrl, pagenation)];
+    }
+
+    if (pagenation.pagenationType === 'Next Page Button') {
+        return await nextPage(catalogUrl, pagenation);
+    }
+
+    return [await infiniteScroll(catalogUrl)];
+}
+
+async function nextPage(
+    catalogUrl,
     pagenation = {
         pagenationType: null,
         xpath: null,
@@ -39,51 +56,130 @@ async function getCategorizedCatalogHTML(
     scapedPagesUrls = [],
     browser = null
 ) {
-    if (scapedPagesUrls.includes(categoryUrl)) {
+    if (scapedPagesUrls.includes(catalogUrl)) {
         await browser.close();
         return pages;
     }
     if (!browser) {
         browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     }
-    console.log("starting with", categoryUrl);
     const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36';
     const page = await browser.newPage();
     // const recorder = new PuppeteerScreenRecorder(page);
     // await recorder.start(`./video/${Math.random() * 1000}.mp4`);
     await page.setUserAgent(userAgent);
-    await page.goto(categoryUrl, { waitUntil: 'networkidle0' });
+    await page.goto(catalogUrl, { waitUntil: 'networkidle0' });
     const html = await page.content();
     pages.push(html);
-    scapedPagesUrls.push(categoryUrl);
+    scapedPagesUrls.push(catalogUrl);
 
-    // scroll to the bottom of the page
-    // await page.evaluate(() => {
-    //     window.scrollTo(0, document.body.scrollHeight);
-    // });
-
-    if (pagenation.pagenationType === 'Infinite Scroll') {
-        // Todo: Implement Infinite Scroll
-        return []
-    }
-    else {
-        const res = await page.$$eval(pagenation.cssSelector, (pagenationElements) => {
-            const pagenationElement = pagenationElements[pagenationElements.length - 1];
-            if (!pagenationElement || pagenationElement.disabled) {
-                return pages;
-            }
-            pagenationElement.click()
-        });
-        if (res) {
-            return pages;
+    const res = await page.$$eval(pagenation.cssSelector, (pagenationElements) => {
+        const pagenationElement = pagenationElements[pagenationElements.length - 1];
+        if (!pagenationElement || pagenationElement.disabled) {
+            return "pages";
         }
-        await page.waitForNavigation({ waitUntil: 'networkidle0' });
-        const nextUrl = page.url();
-        return await getCategorizedCatalogHTML(nextUrl, pagenation, pages, scapedPagesUrls, browser);
+        pagenationElement.click()
+    });
+    if (res == "pages") {
+        await browser.close();
+        return pages;
     }
+    console.log("waiting for url change....", page.url());
+    await waitFor(2);
+    const nextUrl = page.url();
+    // await recorder.stop();
+    return await nextPage(nextUrl, pagenation, pages, scapedPagesUrls, browser);
+}
+
+async function loadMore(
+    catalogUrl,
+    pagenation = {
+        pagenationType: null,
+        cssSelector: null
+    },
+) {
+    const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36';
+    const page = await browser.newPage();
+    // const recorder = new PuppeteerScreenRecorder(page);
+    // await recorder.start(`./video/${Math.random() * 1000}.mp4`);
+    await page.setUserAgent(userAgent);
+    await page.goto(catalogUrl, { waitUntil: 'networkidle0' });
+    var html;
+    do {
+        console.log("in loop");
+        await waitFor(5);
+        const btn = await page.$(pagenation.cssSelector)
+        if (!btn || html == await page.content()) {
+            break;
+        }
+        html = await page.content();
+        await page.evaluate((element) => {
+            element.scrollIntoView();
+            element.click();
+        }, btn);
+    } while (true);
+
+    html = await page.content();
+    // await recorder.stop();
+    await browser.close();
+    return html;
+}
+
+
+async function infiniteScroll(
+    catalogUrl
+) {
+    const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36';
+    const page = await browser.newPage();
+    // const recorder = new PuppeteerScreenRecorder(page);
+    // await recorder.start(`./video/${Math.random() * 1000}.mp4`);
+    await page.setUserAgent(userAgent);
+    await page.goto(catalogUrl, { waitUntil: 'networkidle0' });
+
+    var times = 0;
+    var previousHeight;
+    do {
+        console.log("times =>", times);
+        if (previousHeight == await page.evaluate("document.body.scrollHeight") || times >= 10) {
+            break;
+        }
+        previousHeight = await page.evaluate("document.body.scrollHeight");
+
+        /*
+            UP SCROLL
+        */
+        for (let hightPercent = previousHeight; hightPercent > previousHeight * 0.2; hightPercent -= 50) {
+            await waitFor(0.1);
+            await page.evaluate(`window.scrollTo(0, ${hightPercent})`);
+        }
+
+        /*
+            DOWN SCROLL
+        */
+        // for (let hightPercent = previousHeight*0.2; hightPercent < previousHeight; hightPercent += 50) {
+        //     await waitFor(0.5);
+        //     await page.evaluate(`window.scrollTo(0, ${hightPercent})`);
+        // }
+
+        console.log("previousHeight", previousHeight);
+        times += 1;
+        await waitFor(10);
+    } while (true)
+
+    await page.screenshot({
+        fullPage: true,
+        path: "video/ss.png"
+    })
+
+    const html = await page.content();
+    // await recorder.stop();
+    await browser.close();
+    return html;
 }
 
 module.exports = {
     getHTML,
-    getCategorizedCatalogHTML
+    getCatalogHTML
 };
