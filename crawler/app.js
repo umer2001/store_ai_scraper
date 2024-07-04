@@ -1,6 +1,7 @@
 const express = require('express');
 const { getHTML, getCatalogHTML } = require('./crawl');
 const { cleanHTML, getPagenationType, getProductSelector } = require('./utils');
+const { extractProductsLink } = require('./extractor');
 const app = express();
 
 app.use(express.json());
