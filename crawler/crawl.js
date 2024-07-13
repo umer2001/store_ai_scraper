@@ -168,10 +168,10 @@ async function infiniteScroll(
         await waitFor(10);
     } while (true)
 
-    await page.screenshot({
-        fullPage: true,
-        path: "video/ss.png"
-    })
+    // await page.screenshot({
+    //     fullPage: true,
+    //     path: "video/ss.png"
+    // })
 
     const html = await page.content();
     // await recorder.stop();
