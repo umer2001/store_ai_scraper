@@ -31,7 +31,7 @@ const cleanHTML = async (htmlContent) => {
 
 const getProductSelector = async (purifiedHtmlContent) => {
     const xpathPrompt = `
-            Extract the xpath and css selector from the a tag, which will allow me to extract product page link (not the product image link) from the product cards given ecommerce website catalog page.
+            Extract a generic xpath and css selector from the a tag, which will allow me to extract product page links (not the product image link) from the product cards given ecommerce website catalog page.
     
             html content:
             ${purifiedHtmlContent}
