@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer');
-const { waitFor } = require('./utils');
+const { waitFor, scrollSlowly } = require('./utils');
 
 async function getHTML(url) {
     // set User-Agent
@@ -111,6 +111,10 @@ async function loadMore(
         await waitFor(5);
         const btn = await page.$(pagenation.cssSelector)
         if (!btn || html == await page.content()) {
+            const endHeight = await page.evaluate("document.body.scrollHeight");
+            await scrollSlowly(page, 0, 0.1, "up");
+            await waitFor(0.5);
+            await scrollSlowly(page, endHeight, 0.1);
             break;
         }
         html = await page.content();

@@ -5,7 +5,7 @@ services:
       dockerfile: crawler/Dockerfile
       context: ../
     volumes:
-      - ./output:/app/output
+      - ./output:/usr/src/app/output
     ports:
       - "3000:3000"
     env_file:

@@ -99,9 +99,27 @@ const waitFor = async (seconds) => {
     });
 }
 
+const scrollSlowly = async (page, targetHeight, wait = 0.1, direction = "down") => {
+    if (direction == "down") {
+        await page.evaluate(`window.scrollTo(0, 0)`);
+        for (let hightPercent = targetHeight * 0.2; hightPercent < targetHeight; hightPercent += 50) {
+            await waitFor(wait);
+            await page.evaluate(`window.scrollTo(0, ${hightPercent})`);
+        }
+    }
+    else {
+        await page.evaluate(`window.scrollTo(0, ${targetHeight})`);
+        for (let hightPercent = targetHeight; hightPercent > targetHeight * 0.2; hightPercent -= 50) {
+            await waitFor(wait);
+            await page.evaluate(`window.scrollTo(0, ${hightPercent})`);
+        }
+    }
+}
+
 module.exports = {
     cleanHTML,
     getProductSelector,
     getPagenationType,
-    waitFor
+    waitFor,
+    scrollSlowly
 };
