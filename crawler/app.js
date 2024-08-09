@@ -17,21 +17,21 @@ app.post('/scrape', async (req, res) => {
 });
 
 app.post('/scrape-catalog', async (req, res) => {
-    const { url } = req.body;
+    const { url, cache } = req.body;
     if (!url) {
         return res.status(400).json({ error: 'URL is required' });
     }
 
     html = await getHTML(url);
     const purifiedHTML = await cleanHTML(html);
-    const pagenationType = await getPagenationType(purifiedHTML);
+    const pagenationType = cache?.pagination_type || await getPagenationType(purifiedHTML);
     console.log("pagenationType =>", pagenationType);
     const pageList = await getCatalogHTML(url, pagenationType);
     console.log("pageList length =>", pageList.length);
 
     // extraction
 
-    const productSelector = await getProductSelector(purifiedHTML);
+    const productSelector = cache?.product_selector || await getProductSelector(purifiedHTML);
     console.log("productSelector =>", productSelector);
 
     var productLinks = [];
@@ -39,7 +39,7 @@ app.post('/scrape-catalog', async (req, res) => {
         productLinks = productLinks.concat(extractProductsLink(pageHtml, productSelector));
     })
 
-    return res.json({ productLinks });
+    return res.json({ productLinks, cache: { pagination_type: pagenationType, product_selector: productSelector } });
 });
 
 const PORT = process.env.PORT || 3000;
