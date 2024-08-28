@@ -7,7 +7,7 @@ async function getHTML(url) {
     const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     const page = await browser.newPage();
     await page.setUserAgent(userAgent);
-    await page.goto(url, { waitUntil: 'networkidle0', timeout: 10000 });
+    await page.goto(url, { waitUntil: 'networkidle0', timeout: process.env.PUPPETEER_TIMEOUT || 3000 });
     const html = await page.content();
 
     // const host = new URL(url).hostname;
@@ -68,7 +68,7 @@ async function nextPage(
     // const recorder = new PuppeteerScreenRecorder(page);
     // await recorder.start(`./video/${Math.random() * 1000}.mp4`);
     await page.setUserAgent(userAgent);
-    await page.goto(catalogUrl, { waitUntil: 'networkidle0' });
+    await page.goto(catalogUrl, { waitUntil: 'networkidle0', timeout: process.env.PUPPETEER_TIMEOUT || 3000 });
     const html = await page.content();
     pages.push(html);
     scapedPagesUrls.push(catalogUrl);
@@ -104,7 +104,7 @@ async function loadMore(
     // const recorder = new PuppeteerScreenRecorder(page);
     // await recorder.start(`./video/${Math.random() * 1000}.mp4`);
     await page.setUserAgent(userAgent);
-    await page.goto(catalogUrl, { waitUntil: 'networkidle0' });
+    await page.goto(catalogUrl, { waitUntil: 'networkidle0', timeout: process.env.PUPPETEER_TIMEOUT || 3000 });
     var html;
     do {
         console.log("in loop");
@@ -140,7 +140,7 @@ async function infiniteScroll(
     // const recorder = new PuppeteerScreenRecorder(page);
     // await recorder.start(`./video/${Math.random() * 1000}.mp4`);
     await page.setUserAgent(userAgent);
-    await page.goto(catalogUrl, { waitUntil: 'networkidle0' });
+    await page.goto(catalogUrl, { waitUntil: 'networkidle0', timeout: process.env.PUPPETEER_TIMEOUT || 3000 });
 
     var times = 0;
     var previousHeight;
