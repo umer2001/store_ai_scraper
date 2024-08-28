@@ -7,7 +7,7 @@ async function getHTML(url) {
     const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     const page = await browser.newPage();
     await page.setUserAgent(userAgent);
-    await page.goto(url, { waitUntil: 'networkidle0' });
+    await page.goto(url, { waitUntil: 'networkidle0', timeout: 10000 });
     const html = await page.content();
 
     // const host = new URL(url).hostname;
