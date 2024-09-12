@@ -1,6 +1,11 @@
 version: "3.8"
+
+networks:
+  my-bridge-network:
+    driver: bridge
+    
 services:
-  server:
+  crawler-server:
     build:
       dockerfile: crawler/Dockerfile
       context: ../
@@ -11,3 +16,5 @@ services:
     env_file:
       - .env
     restart: always
+    networks:
+      - my-bridge-network
