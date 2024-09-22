@@ -1,9 +1,10 @@
 const puppeteer = require('puppeteer');
 const { getContext, setContext } = require('./context');
-const { waitFor } = require('./utils');
+const { waitFor, parseProxyString } = require('./utils');
 
 async function launchBrowser() {
-    const { proxy } = getContext("body");
+    const { proxy: proxyString } = getContext("body");
+    const proxy = proxyString ? parseProxyString(proxyString) : null;
     // set User-Agent
     const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36';
     const args = [

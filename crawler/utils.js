@@ -116,10 +116,24 @@ const scrollSlowly = async (page, targetHeight, wait = 0.1, direction = "down") 
     }
 }
 
+const parseProxyString = (proxyString) => {
+    const [protocol, url] = proxyString.split("://");
+    const [credentials, host] = url.split("@");
+    const [username, password] = credentials.split(":");
+    return {
+        protocol,
+        username,
+        password,
+        host,
+        url: `${protocol}://${host}`
+    };
+}
+
 module.exports = {
     cleanHTML,
     getProductSelector,
     getPagenationType,
     waitFor,
-    scrollSlowly
+    scrollSlowly,
+    parseProxyString
 };
