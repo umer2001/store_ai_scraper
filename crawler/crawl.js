@@ -1,12 +1,42 @@
 const puppeteer = require('puppeteer');
-const { waitFor, scrollSlowly } = require('./utils');
+const { getContext, setContext } = require('./context');
+const { waitFor } = require('./utils');
 
-async function getHTML(url) {
+async function launchBrowser() {
+    const { proxy } = getContext("body");
     // set User-Agent
     const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36';
-    const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    const browser = await puppeteer.launch({
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            proxy &&
+            `--proxy-server=${proxy.url}`
+        ]
+    });
     const page = await browser.newPage();
     await page.setUserAgent(userAgent);
+    // Set the proxy authentication credentials if required
+    if (proxy.username && proxy.password) {
+        await page.authenticate({ username: proxy.username, password: proxy.password });
+    }
+    setContext("browser", browser);
+    setContext("page", page);
+    return { page, browser };
+}
+
+async function runInBrowser(fn, ...args) {
+    const { browser } = await launchBrowser();
+    // const recorder = new PuppeteerScreenRecorder(page);
+    // await recorder.start(`./video/${Math.random() * 1000}.mp4`);
+    const result = await fn(...args);
+    // await recorder.stop();
+    await browser.close();
+    return result;
+}
+
+async function getHTML({ url }) {
+    const page = getContext("page");
     await page.goto(url, { waitUntil: 'networkidle0', timeout: process.env.PUPPETEER_TIMEOUT || 30000 });
     const html = await page.content();
 
@@ -20,9 +50,6 @@ async function getHTML(url) {
 
     // // Write the HTML to a file
     // fs.writeFileSync(path.join(outputPath, filename), html);
-
-    await browser.close();
-
     return html;
 }
 
@@ -61,14 +88,10 @@ async function nextPage(
         return pages;
     }
     if (!browser) {
-        browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+        browser = getContext("browser");
     }
-    const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36';
-    const page = await browser.newPage();
-    // const recorder = new PuppeteerScreenRecorder(page);
-    // await recorder.start(`./video/${Math.random() * 1000}.mp4`);
-    await page.setUserAgent(userAgent);
-    await page.goto(catalogUrl, { waitUntil: 'networkidle0', timeout: process.env.PUPPETEER_TIMEOUT || 3000 });
+    const page = getContext("page");
+    await page.goto(catalogUrl, { waitUntil: 'networkidle0' });
     const html = await page.content();
     pages.push(html);
     scapedPagesUrls.push(catalogUrl);
@@ -87,7 +110,6 @@ async function nextPage(
     console.log("waiting for url change....", page.url());
     await waitFor(2);
     const nextUrl = page.url();
-    // await recorder.stop();
     return await nextPage(nextUrl, pagenation, pages, scapedPagesUrls, browser);
 }
 
@@ -98,12 +120,7 @@ async function loadMore(
         cssSelector: null
     },
 ) {
-    const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
-    const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36';
-    const page = await browser.newPage();
-    // const recorder = new PuppeteerScreenRecorder(page);
-    // await recorder.start(`./video/${Math.random() * 1000}.mp4`);
-    await page.setUserAgent(userAgent);
+    const page = getContext("page");
     await page.goto(catalogUrl, { waitUntil: 'networkidle0', timeout: process.env.PUPPETEER_TIMEOUT || 3000 });
     var html;
     do {
@@ -125,8 +142,6 @@ async function loadMore(
     } while (true);
 
     html = await page.content();
-    // await recorder.stop();
-    await browser.close();
     return html;
 }
 
@@ -134,12 +149,7 @@ async function loadMore(
 async function infiniteScroll(
     catalogUrl
 ) {
-    const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
-    const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36';
-    const page = await browser.newPage();
-    // const recorder = new PuppeteerScreenRecorder(page);
-    // await recorder.start(`./video/${Math.random() * 1000}.mp4`);
-    await page.setUserAgent(userAgent);
+    const { page } = getContext("page");
     await page.goto(catalogUrl, { waitUntil: 'networkidle0', timeout: process.env.PUPPETEER_TIMEOUT || 3000 });
 
     var times = 0;
@@ -178,12 +188,11 @@ async function infiniteScroll(
     // })
 
     const html = await page.content();
-    // await recorder.stop();
-    await browser.close();
     return html;
 }
 
 module.exports = {
     getHTML,
-    getCatalogHTML
+    getCatalogHTML,
+    runInBrowser
 };
