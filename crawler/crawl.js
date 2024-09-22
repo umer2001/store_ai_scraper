@@ -6,18 +6,20 @@ async function launchBrowser() {
     const { proxy } = getContext("body");
     // set User-Agent
     const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36';
+    const args = [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+    ];
+    if (proxy?.url) {
+        args.push(`--proxy-server=${proxy.url}`);
+    }
     const browser = await puppeteer.launch({
-        args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            proxy &&
-            `--proxy-server=${proxy.url}`
-        ]
+        args: args,
     });
     const page = await browser.newPage();
     await page.setUserAgent(userAgent);
     // Set the proxy authentication credentials if required
-    if (proxy.username && proxy.password) {
+    if (proxy?.username && proxy?.password) {
         await page.authenticate({ username: proxy.username, password: proxy.password });
     }
     setContext("browser", browser);
