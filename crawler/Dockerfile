@@ -16,7 +16,8 @@ RUN apt-get update && \
 
 WORKDIR /tmp
 
-COPY . /tmp
+#COPY . /tmp
+COPY ../requirements.txt /tmp
 
 RUN python3 -m venv $VIRTUAL_ENV
 RUN pip3 install --no-cache-dir -r requirements.txt
