@@ -5,6 +5,7 @@ const { waitFor, parseProxyString } = require('./utils');
 async function launchBrowser() {
     const { proxy: proxyString } = getContext("body");
     const proxy = proxyString ? parseProxyString(proxyString) : null;
+    console.log(proxy);
     // set User-Agent
     const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36';
     const args = [
@@ -39,6 +40,7 @@ async function runInBrowser(fn, ...args) {
 }
 
 async function getHTML({ url }) {
+    console.log(url);
     const page = getContext("page");
     await page.goto(url, { waitUntil: 'networkidle0', timeout: process.env.PUPPETEER_TIMEOUT || 30000 });
     const html = await page.content();
