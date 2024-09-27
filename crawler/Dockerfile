@@ -16,8 +16,8 @@ RUN apt-get update && \
 
 WORKDIR /tmp
 
-#COPY . /tmp
-COPY ../requirements.txt /tmp
+COPY . /tmp
+#COPY ../requirements.txt /tmp
 
 RUN python3 -m venv $VIRTUAL_ENV
 RUN pip3 install --no-cache-dir -r requirements.txt
@@ -37,7 +37,7 @@ RUN npm install
 # Bundle app source
 COPY crawler .
 
-COPY ../ /tmp
+COPY . /tmp
 
 # Your app binds to port 3000 so you'll use the EXPOSE instruction to have it mapped by the docker daemon
 EXPOSE 3000
